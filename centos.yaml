@@ -1,0 +1,69 @@
+
+#prerequisite create paramaters for monitoring agent paramater url and hostname 
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Required Parameters"
+			- monitoring_agent_package
+			- hostname
+			
+	Userdata:
+		"Fn::Base64": !Sub |
+      #!/bin/bash -x
+      
+      #install aws-cli & python pip as ubuntu will not be python package
+		  apt-get install aws-cli -y
+		  apt-get install python pip -y
+		  curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
+		  python get-pip.py
+		  
+		  # Install Python add-ons:
+      sudo pip install pystache
+      sudo pip install argparse
+      sudo pip install python-daemon
+      sudo pip install requests
+		  
+		  #install cloud-init packages
+		  yum install tar -y
+		  rpm -Uvh https://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm 
+		  yum install cloud-init
+	
+Metadata:
+  AWS::CloudFormation::Init:
+    config:
+	  packages:
+		apt-get:
+		  monitoring-agent: !Sub ${monitoring_agent_package}    #pass the monitoring agent rpm url/s3 bucket url/NFS share/EFS share
+		apt:
+		 # The name of the repository
+		  monitoring-agent:
+			- arches: [default]
+				search:
+					- http://monitoring_agent_package
+			
+		files:
+		  /etc/hosts:
+			content: !Sub |
+			  x.x.x.x    ${hostname}           #set hostname for the server
+	      /etc/mon-agent/agent.conf
+			content: !Sub |
+			  hostname    ${hostname}
+		aws:
+		  preserve_hostname: true
+          hostname: ${hostname}
+				
+		#group and user creation
+		groups:
+		  - mystaff: [alice,bob]
+	
+		users:
+		  - name: alice
+			groups: admin, users
+			sudo: "ALL=(ALL) NOPASSWD:ALL"
+			shell: /bin/bash
+		  - name: bob
+			groups: admin, users 
+			sudo: "ALL=(ALL) NOPASSWD:ALL"
+			shell: /bin/bash
