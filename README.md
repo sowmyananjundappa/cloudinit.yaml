@@ -6,7 +6,7 @@ This are sample scripts for different flavours of aws linux OS such as (amazon l
 Userdata has bash script
 Complete script is based on yaml template for userdata and metadata creation
 
-Works on below flavours
+Works on following flavours
 Amazon linux > 7
 Centos >= 6
 RHEL >=6
