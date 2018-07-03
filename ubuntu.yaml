@@ -1,0 +1,48 @@
+
+#prerequisite create paramaters for monitoring agent paramater url and hostname 
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Required Parameters"
+			- monitoring_agent_package
+			- hostname
+
+Metadata:
+  AWS::CloudFormation::Init:
+    config:
+	  packages:
+		apt-get:
+		  monitoring-agent: !Sub ${monitoring_agent_package}    #pass the monitoring agent rpm url/s3 bucket url/NFS share/EFS share
+		apt:
+		 # The name of the repository
+		  monitoring-agent:
+			- arches: [default]
+				search:
+					- http://monitoring_agent_package
+			
+		files:
+		  /etc/hosts:
+			content: !Sub |
+			  x.x.x.x    ${hostname}           #set hostname for the server
+	      /etc/mon-agent/agent.conf
+			content: !Sub |
+			  hostname    ${hostname}
+		aws:
+		  preserve_hostname: true
+          hostname: ${hostname}
+				
+		#group and user creation
+		groups:
+		  - mystaff: [alice,bob]
+	
+		users:
+		  - name: alice
+			groups: admin, users
+			sudo: "ALL=(ALL) NOPASSWD:ALL"
+			shell: /bin/bash
+		  - name: bob
+			groups: admin, users 
+			sudo: "ALL=(ALL) NOPASSWD:ALL"
+			shell: /bin/bash
